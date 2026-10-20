@@ -14,7 +14,6 @@ categories = ["hardware-support", "gui"]
 eframe = { version = "0.29", default-features = false, features = [
     "default_fonts",
     "glow",
-    "wayland",
     "x11",
 ] }
 egui_extras = { version = "0.29", features = ["image"] }
@@ -28,6 +27,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
 thiserror = "1.0"
+ksni = { version = "0.3", default-features = false, features = ["async-io", "blocking"] }
+winit = { version = "0.30", default-features = false, features = ["x11", "rwh_06"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

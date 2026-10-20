@@ -9,6 +9,8 @@ pub mod gui;
 pub mod macros;
 pub mod profiles;
 pub mod protocol;
+pub mod tray;
+mod window;
 
 pub use app::AttackSharkApp;
 pub use config::AppConfig;

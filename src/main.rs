@@ -4,6 +4,7 @@ use anyhow::Result;
 use attack_shark_x3::AttackSharkApp;
 use eframe::egui::Vec2;
 use tracing::info;
+use winit::platform::x11::EventLoopBuilderExtX11;
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
@@ -15,11 +16,24 @@ fn main() -> Result<()> {
 
     info!("Starting Attack Shark X3 configuration tool v{}", env!("CARGO_PKG_VERSION"));
 
+    let icon_data = eframe::icon_data::from_png_bytes(include_bytes!("../assets/icons/icon.png")).ok();
+    let mut viewport = eframe::egui::ViewportBuilder::default()
+        .with_title("Attack Shark X3")
+        .with_app_id("attack-shark-x3")
+        .with_decorations(true)
+        .with_inner_size(Vec2::new(1127.0, 760.0))
+        .with_min_inner_size(Vec2::new(960.0, 680.0));
+    if let Some(icon) = icon_data {
+        viewport = viewport.with_icon(icon);
+    }
+
     let native_options = eframe::NativeOptions {
-        viewport: eframe::egui::ViewportBuilder::default()
-            .with_title("ATTACK SHARK")
-            .with_inner_size(Vec2::new(1127.0, 760.0))
-            .with_min_inner_size(Vec2::new(960.0, 680.0)),
+        viewport,
+        // Wayland sessions use XWayland: winit cannot hide/restore a Wayland
+        // window, and GNOME does not supply server-side Wayland decorations.
+        event_loop_builder: Some(Box::new(|builder| {
+            builder.with_x11();
+        })),
         ..Default::default()
     };
 

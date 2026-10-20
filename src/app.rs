@@ -1,13 +1,16 @@
 //! Main eframe application coordinating GUI and device communication.
 
-use eframe::egui::{self, Color32, Pos2, Rect, Stroke, Vec2};
+use eframe::egui::{self, Color32, Pos2, Rect, Vec2};
+use std::sync::mpsc::{channel, Receiver};
 use std::time::{Duration, Instant};
-use tracing::{error, info};
+use tracing::error;
 
 use crate::config::AppConfig;
-use crate::device::{ConnectionType, DeviceManager};
+use crate::device::DeviceManager;
 use crate::gui::*;
 use crate::protocol::ApplyBurst;
+use crate::tray::{AttackSharkTray, TrayEvent, TrayService};
+use crate::window::WindowState;
 
 pub struct AttackSharkApp {
     config: AppConfig,
@@ -22,6 +25,10 @@ pub struct AttackSharkApp {
     logo_texture: Option<egui::TextureHandle>,
     last_poll_time: Instant,
     status_message: Option<(String, Instant)>,
+
+    tray: Option<TrayService>,
+    tray_rx: Receiver<TrayEvent>,
+    window: WindowState,
 }
 
 impl AttackSharkApp {
@@ -32,7 +39,10 @@ impl AttackSharkApp {
         let mut device = DeviceManager::new();
         device.refresh_connection();
 
-        Self {
+        let (tray_tx, tray_rx) = channel();
+        let tray = AttackSharkTray::spawn_service(tray_tx, cc.egui_ctx.clone());
+
+        let app = Self {
             config,
             device,
             buttons_panel: ButtonsPanel::default(),
@@ -44,6 +54,29 @@ impl AttackSharkApp {
             logo_texture: None,
             last_poll_time: Instant::now(),
             status_message: Some(("Ready".into(), Instant::now())),
+            tray,
+            tray_rx,
+            window: WindowState::default(),
+        };
+        app.sync_tray_state();
+        app
+    }
+
+    fn sync_tray_state(&self) {
+        if let Some(ref tray) = self.tray {
+            let status = self.device.connection_type.label().to_string();
+            let battery = self
+                .device
+                .battery_status
+                .as_ref()
+                .map(|b| format!("{}%", b.percentage))
+                .unwrap_or_default();
+            let visible = self.window.visible;
+            let _ = tray.handle.update(|tray| {
+                tray.status_text = status;
+                tray.battery_text = battery;
+                tray.is_visible = visible;
+            });
         }
     }
 
@@ -93,11 +126,31 @@ impl AttackSharkApp {
 
 impl eframe::App for AttackSharkApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        while let Ok(event) = self.tray_rx.try_recv() {
+            self.window.tray_event(ctx, event);
+            self.sync_tray_state();
+        }
+        if self.window.should_exit {
+            return;
+        }
+
+        let tray_available = self.tray.as_ref().is_some_and(TrayService::is_available);
+        if !tray_available && !self.window.visible {
+            self.window.set_visible(ctx, true);
+        }
+        if ctx.input(|i| i.viewport().close_requested()) {
+            self.window.close_requested(ctx, tray_available);
+            self.sync_tray_state();
+        }
+        // Schedule before polling: an idle first frame must still start the timer.
+        ctx.request_repaint_after(Duration::from_secs(1));
+
         // Periodic background poll every 2 seconds
         if self.last_poll_time.elapsed() >= Duration::from_secs(2) {
             self.last_poll_time = Instant::now();
             self.device.refresh_connection();
             self.device.poll_battery();
+            self.sync_tray_state();
             ctx.request_repaint_after(Duration::from_millis(500));
         }
 
@@ -141,68 +194,6 @@ impl eframe::App for AttackSharkApp {
                         Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(1.0, 1.0)),
                         Color32::WHITE,
                     );
-                }
-
-                // Window control buttons in the top-right corner
-                let btn_size = 20.0;
-                let btn_spacing = 4.0;
-                let close_rect = Rect::from_min_size(
-                    Pos2::new(header_rect.max.x - btn_size, header_rect.min.y + 4.0),
-                    Vec2::new(btn_size, btn_size),
-                );
-                let min_rect = Rect::from_min_size(
-                    Pos2::new(close_rect.min.x - btn_size - btn_spacing, header_rect.min.y + 4.0),
-                    Vec2::new(btn_size, btn_size),
-                );
-
-                // Minimize button
-                let min_resp = ui.allocate_rect(min_rect, egui::Sense::click());
-                let min_painter = ui.painter_at(min_rect);
-                let min_hover = min_resp.hovered();
-                min_painter.rect_filled(
-                    min_rect,
-                    Rounding::same(2.0),
-                    if min_hover { Color32::from_rgb(0x33, 0x33, 0x33) } else { Color32::from_rgb(0x22, 0x22, 0x22) },
-                );
-                min_painter.rect_stroke(
-                    min_rect,
-                    Rounding::same(2.0),
-                    Stroke::new(1.0, Color32::from_rgb(0x3A, 0x3A, 0x3A)),
-                );
-                min_painter.text(
-                    min_rect.center(),
-                    egui::Align2::CENTER_CENTER,
-                    "—",
-                    egui::FontId::proportional(10.0),
-                    COLOR_TEXT_PRIMARY,
-                );
-                if min_resp.clicked() {
-                    ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
-                }
-
-                // Close button
-                let close_resp = ui.allocate_rect(close_rect, egui::Sense::click());
-                let close_painter = ui.painter_at(close_rect);
-                let close_hover = close_resp.hovered();
-                close_painter.rect_filled(
-                    close_rect,
-                    Rounding::same(2.0),
-                    if close_hover { COLOR_ACCENT_RED } else { Color32::from_rgb(0x22, 0x22, 0x22) },
-                );
-                close_painter.rect_stroke(
-                    close_rect,
-                    Rounding::same(2.0),
-                    Stroke::new(1.0, if close_hover { COLOR_ACCENT_RED_HOVER } else { Color32::from_rgb(0x3A, 0x3A, 0x3A) }),
-                );
-                close_painter.text(
-                    close_rect.center(),
-                    egui::Align2::CENTER_CENTER,
-                    "✕",
-                    egui::FontId::proportional(10.0),
-                    COLOR_TEXT_PRIMARY,
-                );
-                if close_resp.clicked() {
-                    ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
             });
 
@@ -314,5 +305,8 @@ impl eframe::App for AttackSharkApp {
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.config.save();
+        if let Some(tray) = self.tray.take() {
+            tray.handle.shutdown().wait();
+        }
     }
 }

@@ -2,5 +2,6 @@
 **/*.rs.bk
 *.log
 .DS_Store
+__pycache__/
 ATTACK SHARK X3 SOFT.exe
 extracted/

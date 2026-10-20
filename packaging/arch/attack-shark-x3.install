@@ -1,0 +1,12 @@
+post_install() {
+    udevadm control --reload-rules 2>/dev/null || true
+    udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
+    udevadm settle --timeout=5 2>/dev/null || true
+}
+post_upgrade() {
+    post_install
+}
+post_remove() {
+    udevadm control --reload-rules 2>/dev/null || true
+    udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
+}

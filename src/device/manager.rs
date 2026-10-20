@@ -2,6 +2,7 @@
 
 use anyhow::{anyhow, Context, Result};
 use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::thread::sleep;
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -145,7 +146,13 @@ impl DeviceManager {
                     }
                     Err(e) => {
                         warn!("Could not open config interface {:?}: {}", path, e);
-                        if e.to_string().to_lowercase().contains("permission") {
+                        let open_error = std::fs::OpenOptions::new()
+                            .read(true).write(true)
+                            .open(std::ffi::OsStr::from_bytes(path.as_bytes()))
+                            .err();
+                        if open_error.is_some_and(|err| err.kind() == std::io::ErrorKind::PermissionDenied)
+                            || e.to_string().to_lowercase().contains("permission")
+                        {
                             permission_error = true;
                         }
                     }

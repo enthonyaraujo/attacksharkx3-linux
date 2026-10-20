@@ -6,9 +6,10 @@ use std::time::{Duration, Instant};
 use tracing::error;
 
 use crate::config::AppConfig;
-use crate::device::DeviceManager;
+use crate::device::{ConnectionType, DeviceManager};
 use crate::gui::*;
 use crate::protocol::ApplyBurst;
+use crate::permissions::PermissionSetup;
 use crate::tray::{AttackSharkTray, TrayEvent, TrayService};
 use crate::window::WindowState;
 
@@ -29,6 +30,7 @@ pub struct AttackSharkApp {
     tray: Option<TrayService>,
     tray_rx: Receiver<TrayEvent>,
     window: WindowState,
+    permissions: PermissionSetup,
 }
 
 impl AttackSharkApp {
@@ -57,6 +59,7 @@ impl AttackSharkApp {
             tray,
             tray_rx,
             window: WindowState::default(),
+            permissions: PermissionSetup::default(),
         };
         app.sync_tray_state();
         app
@@ -144,6 +147,25 @@ impl eframe::App for AttackSharkApp {
         }
         // Schedule before polling: an idle first frame must still start the timer.
         ctx.request_repaint_after(Duration::from_secs(1));
+
+        if self.permissions.poll() {
+            self.device.refresh_connection();
+            self.sync_tray_state();
+        }
+        if self.device.connection_type == ConnectionType::PermissionDenied {
+            self.permissions.request(ctx);
+            egui::TopBottomPanel::top("mouse_permissions").show(ctx, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    if self.permissions.is_running() {
+                        ui.spinner();
+                    }
+                    ui.label(self.permissions.message.as_deref().unwrap_or("Mouse access is required."));
+                    if !self.permissions.is_running() && ui.button("Grant access").clicked() {
+                        self.permissions.retry();
+                    }
+                });
+            });
+        }
 
         // Periodic background poll every 2 seconds
         if self.last_poll_time.elapsed() >= Duration::from_secs(2) {

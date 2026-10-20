@@ -1,0 +1,4 @@
+# Apply before 73-seat-late.rules so logind grants the active local user access.
+# Attack Shark X3: receiver (fa60) and wired USB (fa61).
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1d57", ATTRS{idProduct}=="fa60", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1d57", ATTRS{idProduct}=="fa61", MODE="0660", TAG+="uaccess"

@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+command -v rpmbuild >/dev/null || { echo "rpmbuild is required" >&2; exit 1; }
+prepare_binary
 
-echo "==> Building Attack Shark X3 RPM package"
-TOPDIR="$(pwd)/target/rpmbuild"
-rm -rf "${TOPDIR}"
-mkdir -p "${TOPDIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-
-VERSION="1.0.0"
-TAR_NAME="attack-shark-x3-${VERSION}"
-
-# Create source archive
-git archive --format=tar.gz --prefix="${TAR_NAME}/" HEAD -o "${TOPDIR}/SOURCES/${TAR_NAME}.tar.gz" || {
-    tar --exclude="./target" --exclude="./.git" -czf "${TOPDIR}/SOURCES/${TAR_NAME}.tar.gz" --transform "s,^\.,${TAR_NAME}," .
-}
-
-cp packaging/rpm/attack-shark-x3.spec "${TOPDIR}/SPECS/"
-
-rpmbuild --define "_topdir ${TOPDIR}" -ba "${TOPDIR}/SPECS/attack-shark-x3.spec"
-echo "==> RPM built at: $(find "${TOPDIR}/RPMS" -type f -name '*.rpm')"
+TOPDIR="${PACKAGE_DIR}/rpm"
+SOURCE_NAME="attack-shark-x3-${VERSION}"
+STAGE="${TOPDIR}/source/${SOURCE_NAME}"
+rm -rf "${STAGE}"
+mkdir -p "${TOPDIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp}
+stage_files "${STAGE}"
+tar -czf "${TOPDIR}/SOURCES/${SOURCE_NAME}.tar.gz" -C "${TOPDIR}/source" "${SOURCE_NAME}"
+cp "${PROJECT_ROOT}/packaging/rpm/attack-shark-x3.spec" "${TOPDIR}/SPECS/"
+rpmbuild --define "_topdir ${TOPDIR}" --define "_tmppath ${TOPDIR}/tmp" --define "app_version ${VERSION}" --target "${MACHINE}" -bb "${TOPDIR}/SPECS/attack-shark-x3.spec"
+find "${TOPDIR}/RPMS" -type f -name '*.rpm' -print

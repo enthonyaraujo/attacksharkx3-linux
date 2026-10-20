@@ -1,0 +1,16 @@
+pkgname=attack-shark-x3
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Configuration utility for the Attack Shark X3 gaming mouse'
+arch=('@ARCH@')
+url='https://github.com/enthonyaraujo/attacksharkx3-linux'
+license=('MIT')
+depends=('glibc>=@GLIBC@' 'gcc-libs' 'systemd-libs' 'systemd' 'libx11' 'libxcb' 'libxcursor' 'libxi' 'libxrandr' 'libxkbcommon-x11' 'libglvnd' 'xorg-xwayland' 'polkit')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('@SHA256@')
+install=attack-shark-x3.install
+options=('!strip' '!debug')
+
+package() {
+    cp -a "$srcdir/$pkgname-$pkgver/usr" "$pkgdir/"
+}

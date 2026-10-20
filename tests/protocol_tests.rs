@@ -38,20 +38,20 @@ fn test_sensor_report_building_and_checksum() {
     assert_eq!(report[1], 56);
     assert_eq!(report[2], 0x01); // Profile index
 
-    // Verify low bytes: 800 (15 = 0x0f), 1600 (31 = 0x1f), 2400 (47 = 0x2f), 3200 (63 = 0x3f), 6400 (127 = 0x7f), 26000 (0x07)
+    // Verify low bytes: 800 (15 = 0x0f), 1600 (31 = 0x1f), 2400 (47 = 0x2f), 3200 (63 = 0x3f), 5000 (99 = 0x63), 26000 (0x07)
     assert_eq!(report[8], 0x0F);
     assert_eq!(report[9], 0x1F);
     assert_eq!(report[10], 0x2F);
     assert_eq!(report[11], 0x3F);
-    assert_eq!(report[12], 0x7F);
+    assert_eq!(report[12], 0x63);
     assert_eq!(report[13], 0x07);
 
     // Verify high bytes: 26000 is 519 = 0x0207 -> high byte is 0x02
     assert_eq!(report[16], 0x00);
     assert_eq!(report[21], 0x02);
 
-    // Verify active stage is 1-based on the wire (active_stage 1 => 2 on wire)
-    assert_eq!(report[24], 2);
+    // Verify active stage is 1-based on the wire (active_stage 0 => 1 on wire)
+    assert_eq!(report[24], 1);
 
     // Verify constant at byte 49
     assert_eq!(report[49], 0x01);

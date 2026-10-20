@@ -1,0 +1,108 @@
+name: Linux packages
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build and test against the Ubuntu 22.04 ABI
+        run: docker build -f packaging/ci/Containerfile -t attack-shark-packages .
+      - name: Extract packages and portable binary
+        run: |
+          docker create --name packages attack-shark-packages
+          mkdir -p target/packages
+          docker cp packages:/src/target/packages/. target/packages/
+          docker cp packages:/src/target/release/attack-shark-x3 target/packages/attack-shark-x3
+          docker rm packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            target/packages/attack-shark-x3
+            target/packages/deb/*.deb
+            target/packages/rpm/RPMS/**/*.rpm
+            target/packages/appimage/*.AppImage
+          if-no-files-found: error
+
+  deb-install:
+    needs: portable-build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:24.04', 'ubuntu:26.04', 'debian:13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: target/packages
+      - name: Install with dependency resolution and start the app
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: bash packaging/ci/check-package.sh deb "$IMAGE" target/packages/deb/*.deb
+
+  appimage-startup:
+    needs: portable-build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: target/packages
+      - name: Start the standalone AppImage without installing the native package
+        run: bash packaging/ci/check-package.sh appimage ubuntu:24.04 target/packages/appimage/*.AppImage
+
+  rpm-install:
+    needs: portable-build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['fedora:44']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: target/packages
+      - name: Install with dependency resolution and start the app
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: bash packaging/ci/check-package.sh rpm "$IMAGE" target/packages/rpm/RPMS/x86_64/*.rpm
+
+  arch-install:
+    needs: portable-build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: target/packages
+      - name: Build an Arch package, install it and start the app
+        run: bash packaging/ci/check-arch.sh archlinux:base target/packages/attack-shark-x3 target/arch-artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-package
+          path: target/arch-artifacts/*.pkg.tar.zst
+          if-no-files-found: error

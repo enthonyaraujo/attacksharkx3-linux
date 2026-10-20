@@ -1,7 +1,7 @@
 # Attack Shark X3 — Native Linux Driver & GUI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.90+-orange.svg)](https://www.rust-lang.org/)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20(Wayland%20%2F%20X11)-blue.svg)]()
 
 A native, independent, and open-source **Rust** implementation for complete configuration of the **Attack Shark X3** mouse on Linux, without relying on Wine or proprietary Windows software.
@@ -38,46 +38,59 @@ A native, independent, and open-source **Rust** implementation for complete conf
   - Profile creation, switching, deletion, and restoration.
   - Automatic persistence in `~/.config/attack-shark-x3/config.toml`.
 - **Native Graphical Interface**:
-  - Built with `egui/eframe`, compatible with Wayland and X11 (GNOME, KDE Plasma, etc.).
+  - Built with `egui/eframe`, using X11 or XWayland in Wayland sessions (GNOME, KDE Plasma, XFCE, etc.).
   - Faithful visual reproduction of the original DuiLib interface.
 
 ---
 
 ## Installation and Execution
 
-### 1. Prerequisites (Fedora / Ubuntu / Debian / Arch)
+Use a package built for your CPU architecture. Native packages install the menu
+entry, icon, runtime dependencies and mouse permissions automatically:
 
-- **Fedora**:
-  ```bash
-  sudo dnf install -y rust cargo hidapi-devel
-  ```
-- **Ubuntu / Debian**:
-  ```bash
-  sudo apt install -y rustc cargo libhidapi-dev
-  ```
-- **Arch Linux**:
-  ```bash
-  sudo pacman -S rust hidapi
-  ```
+- **Debian / Ubuntu:** open the `.deb` in the system package installer, or run
+  `sudo apt install ./attack-shark-x3_1.0.0_amd64.deb`.
+- **Fedora:** open the `.rpm` in the system package installer, or run
+  `sudo dnf install ./attack-shark-x3-1.0.0-1.x86_64.rpm`.
+- **Arch:** install the generated `.pkg.tar.zst` with `sudo pacman -U ./attack-shark-x3-*.pkg.tar.zst`.
+- **AppImage:** allow the file to run as a program and launch it. Required application
+  libraries are bundled. If mouse access is missing, the app opens the system
+  authentication dialog and configures access automatically. The GUI runs as your
+  normal user; only the permission helper requests administrator access.
 
-### 2. Configure Permissions (Udev Rules)
+The title bar follows your desktop's window manager. Closing the window hides it
+in a working system tray; the tray can restore it or quit the application.
+On desktops without a tray host, closing exits normally. GNOME's availability of
+tray icons depends on the desktop session; the app does not install or enable
+Shell extensions.
 
-To allow the application to communicate with the mouse without requiring `sudo`:
+Portable builds target **glibc 2.35 or newer** on standard Linux desktops with
+X11/XWayland, udev/logind and a graphics driver. See
+[compatibility](docs/compatibility.md) for scope and validation limits. This is
+not a claim of support for every Linux version or libc implementation.
+
+### Building from source
+
+For development, use Rust **1.90+** and the udev development headers (HIDAPI is compiled into the binary):
 
 ```bash
-sudo cp packaging/udev/99-attack-shark-x3.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
+# Fedora
+sudo dnf install gcc pkgconf-pkg-config systemd-devel
+# Debian / Ubuntu
+sudo apt install build-essential pkg-config libudev-dev
+# Arch
+sudo pacman -S base-devel rust systemd
 
-### 3. Build and Run
-
-```bash
-# Build optimized release version
-cargo build --release
-
-# Run the graphical interface
+cargo build --release --locked
 ./target/release/attack-shark-x3
 ```
+
+A source checkout can install permissions using `bash scripts/install-udev.sh`.
+This developer step is already handled by the distributed native packages and
+the AppImage's first-run setup.
+
+For package builders, ABI baseline checks and automated installation tests, see
+[packaging](docs/packaging.md).
 
 ---
 
@@ -94,7 +107,7 @@ attacksharkx3-linux/
 │   ├── usb-protocol.md         # Complete HID protocol specification
 │   └── compatibility.md        # Compatibility with distros and environments
 ├── packaging/
-│   ├── udev/                   # Udev rules (99-attack-shark-x3.rules)
+│   ├── udev/                   # Udev rules (70-attack-shark-x3.rules)
 │   ├── desktop/                # .desktop shortcut for system menu
 │   ├── deb/                    # Script to generate .deb package
 │   ├── rpm/                    # Spec file to generate .rpm package

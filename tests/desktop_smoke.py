@@ -10,6 +10,7 @@ import ctypes as c
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import tempfile
 import time
@@ -40,8 +41,14 @@ def window_for(pid):
         value = subprocess.check_output(
             ["xprop", "-id", window, "_NET_WM_PID"], text=True,
         )
-        if re.search(rf"= {pid}\s*$", value):
-            return int(window, 16)
+        match = re.search(r"= (\d+)\s*$", value)
+        if match:
+            candidate = int(match.group(1))
+            try:
+                if candidate == pid or os.getpgid(candidate) == pid:
+                    return int(window, 16)
+            except ProcessLookupError:
+                pass
     return None
 
 
@@ -49,6 +56,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, default=Path("target/debug/attack-shark-x3"))
     parser.add_argument("--no-tray", action="store_true")
+    parser.add_argument("--screenshot", type=Path)
     args = parser.parse_args()
     x11 = c.CDLL("libX11.so.6")
     x11.XOpenDisplay.restype = c.c_void_p
@@ -89,7 +97,7 @@ def main():
         env = dict(os.environ, XDG_CONFIG_HOME=config)
         with tempfile.TemporaryFile(mode="w+") as log:
             app = subprocess.Popen([str(args.binary.resolve())], env=env,
-                                   stdout=log, stderr=log)
+                                   stdout=log, stderr=log, start_new_session=True)
             try:
                 window = wait_for(lambda: window_for(app.pid), "Window never appeared")
                 extents = subprocess.check_output(
@@ -97,6 +105,23 @@ def main():
                 )
                 assert any(int(x) > 0 for x in re.findall(r"\d+", extents.split("=", 1)[-1])), extents
                 print("PASS: desktop window manager supplies the window frame")
+                actual_pid = int(subprocess.check_output(
+                    ["xprop", "-id", hex(window), "_NET_WM_PID"], text=True,
+                ).rsplit("=", 1)[1].strip())
+                if args.screenshot:
+                    root = c.c_ulong()
+                    parent = c.c_ulong()
+                    children = c.POINTER(c.c_ulong)()
+                    count = c.c_uint()
+                    x11.XQueryTree.argtypes = [c.c_void_p, c.c_ulong, c.c_void_p,
+                                               c.c_void_p, c.c_void_p, c.c_void_p]
+                    x11.XFree.argtypes = [c.c_void_p]
+                    x11.XQueryTree(display, window, c.byref(root), c.byref(parent),
+                                   c.byref(children), c.byref(count))
+                    if children:
+                        x11.XFree(children)
+                    frame = parent.value if parent.value != root.value else window
+                    subprocess.run(["import", "-window", hex(frame), str(args.screenshot)], check=True)
                 if args.no_tray:
                     close(window)
                     assert app.wait(timeout=15) == 0
@@ -108,14 +133,17 @@ def main():
                                  "org.freedesktop.DBus.Properties.Get",
                                  "org.kde.StatusNotifierWatcher", "RegisteredStatusNotifierItems")
                     return next((item for item in re.findall(r"'([^']+)'", items)
-                                 if f"-{app.pid}-" in item), None)
+                                 if f"-{actual_pid}-" in item), None)
 
                 item = wait_for(find_item, "StatusNotifierItem never registered")
                 service, _, path = item.partition("/")
                 path = "/" + path if path else "/StatusNotifierItem"
-                for _ in range(2):
+                for cycle in range(2):
                     close(window)
                     wait_for(lambda: window_for(app.pid) is None, "Close did not hide the window")
+                    if cycle == 0:
+                        time.sleep(2.5)  # Cover a complete background device poll.
+                        assert window_for(app.pid) is None, "A background repaint reopened the hidden window"
                     assert app.poll() is None, "Close terminated instead of hiding"
                     dbus(service, path, "org.kde.StatusNotifierItem.Activate", 0, 0)
                     window = wait_for(lambda: window_for(app.pid), "Tray did not restore the window")
@@ -133,9 +161,11 @@ def main():
                 print(log.read())
                 raise
             finally:
-                if app.poll() is None:
-                    app.terminate()
-                    app.wait(timeout=5)
+                try:
+                    os.killpg(app.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                app.wait(timeout=5)
                 x11.XCloseDisplay(display)
 
 

@@ -1,0 +1,8 @@
+.git
+target
+extracted
+*.exe
+*.log
+.codex
+.agents
+**/__pycache__

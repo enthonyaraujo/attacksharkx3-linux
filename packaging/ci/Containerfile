@@ -1,0 +1,22 @@
+# Copy the official Rust toolchain onto the oldest supported runtime baseline.
+FROM docker.io/library/rust:1.90-bullseye AS toolchain
+FROM docker.io/library/ubuntu:22.04
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
+COPY --from=toolchain /usr/local/rustup /usr/local/rustup
+COPY --from=toolchain /usr/local/cargo /usr/local/cargo
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config libudev-dev libx11-6 libx11-xcb1 libxcb1 \
+    libxcursor1 libxi6 libxrandr2 libxkbcommon0 libxkbcommon-x11-0 \
+    libgl1 libegl1 python3 rpm ca-certificates curl file binutils \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN cargo test --locked && cargo build --release --locked
+RUN python3 tests/packaging_tests.py
+RUN bash packaging/deb/build-deb.sh && bash packaging/rpm/build-rpm.sh
+RUN curl -fsSL -o /tmp/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
+    && echo '95cbe7cce9717fce90c484e34052ee7c7f1d7635b33c12525b4776826a7d29b6  /tmp/appimagetool' | sha256sum -c - \
+    && curl -fsSL -o /tmp/appimage-runtime https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64 \
+    && echo '617aa77314d57c8b8e4fae9c3f0b35af7b30d5529cb69e98f64f92510ed98a46  /tmp/appimage-runtime' | sha256sum -c - \
+    && chmod +x /tmp/appimagetool \
+    && APPIMAGETOOL=/tmp/appimagetool APPIMAGE_RUNTIME=/tmp/appimage-runtime bash packaging/appimage/build-appimage.sh

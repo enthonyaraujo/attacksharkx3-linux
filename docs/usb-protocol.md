@@ -45,12 +45,20 @@ Each parameter byte is encoded as `[value, 0xFF - value]`.
   - 125 Hz: `0x08` (`0xF7`)
 
 ## 3. Transmission Sequence (Apply Burst)
-When settings are applied, the driver transmits the reports in this strict sequence with ~15 ms delay:
+When settings are applied, the driver transmits the reports in this strict sequence:
 1. Report `0x0C` (Commit lead)
 2. Report `0x04` (Sensor & DPI)
 3. Report `0x05` (Power & Debounce)
 4. Report `0x06` (Polling rate)
 5. Report `0x08` (Button mappings)
+
+After each report, including the last, the driver waits **500 ms for the 2.4 GHz
+receiver** or **15 ms for wired USB**. The receiver delay prevents rapid
+configuration writes from leaving the polling rate unchanged. It was validated
+with `evhz` at 125, 250, 500 and 1000 Hz; see the
+[investigation and hardware evidence](wireless-polling-investigation.md).
+The full wireless apply takes about 2.5 seconds. This delay affects configuration
+writes, not the frequency of mouse input events. Macro-upload pacing is separate.
 
 ## 4. Hardware Macro Storage (Report `0x09`)
 - 128-byte block divided into 3 chunks:

@@ -106,7 +106,7 @@ impl MouseView {
             painter.rect_stroke(
                 pill_rect,
                 Rounding::same(6.0),
-                Stroke::new(1.0, Color32::from_rgba_premultiplied(90, 90, 90, 120)),
+                Stroke::new(1.0_f32, Color32::from_rgba_premultiplied(90, 90, 90, 120)),
             );
             painter.text(
                 overlay_pos,

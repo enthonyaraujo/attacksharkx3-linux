@@ -19,6 +19,8 @@ A native, independent, and open-source **Rust** implementation for complete conf
   - Individual RGB color indicators for each DPI level.
 - **Performance and Sensor (PixArt PAW3395)**:
   - Polling rate: 125 Hz, 250 Hz, 500 Hz, and 1000 Hz.
+    Applying settings over 2.4 GHz takes about 2.5 seconds to allow the receiver
+    to process the configuration reports; mouse input keeps its selected rate.
   - Lift-Off Distance (LOD): 1 mm and 2 mm.
   - Button response time (Debounce): 2 to 50 ms.
   - Ripple Control (On/Off).

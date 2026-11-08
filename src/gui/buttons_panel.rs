@@ -37,7 +37,7 @@ impl ButtonsPanel {
             .fill(COLOR_PANEL_BG)
             .inner_margin(8.0)
             .rounding(4.0)
-            .stroke(Stroke::new(1.0, COLOR_BORDER))
+            .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
             .show(ui, |ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(6.0, 6.0);
 
@@ -58,7 +58,7 @@ impl ButtonsPanel {
                             .size(12.0),
                     )
                     .fill(Color32::from_rgb(0x25, 0x25, 0x25))
-                    .stroke(Stroke::new(1.0, COLOR_HEADER_BORDER)),
+                    .stroke(Stroke::new(1.0_f32, COLOR_HEADER_BORDER)),
                 );
 
                 if macro_btn.clicked() {
@@ -91,7 +91,7 @@ fn render_button_row(
         painter.rect_stroke(
             num_rect,
             Rounding::same(3.0),
-            Stroke::new(1.0, if is_selected { COLOR_ACCENT_RED_HOVER } else { COLOR_HEADER_BORDER }),
+            Stroke::new(1.0_f32, if is_selected { COLOR_ACCENT_RED_HOVER } else { COLOR_HEADER_BORDER }),
         );
         painter.text(
             num_rect.center(),

@@ -44,19 +44,19 @@ pub fn apply_theme(ctx: &egui::Context) {
     style.visuals.faint_bg_color = COLOR_CARD_BG;
 
     style.visuals.widgets.noninteractive.bg_fill = COLOR_PANEL_BG;
-    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0, COLOR_BORDER);
+    style.visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, COLOR_BORDER);
     style.visuals.widgets.noninteractive.rounding = Rounding::same(3.0);
 
     style.visuals.widgets.inactive.bg_fill = COLOR_CARD_BG;
-    style.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0, COLOR_BORDER);
+    style.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, COLOR_BORDER);
     style.visuals.widgets.inactive.rounding = Rounding::same(3.0);
 
     style.visuals.widgets.hovered.bg_fill = Color32::from_rgb(0x2E, 0x2E, 0x2E);
-    style.visuals.widgets.hovered.bg_stroke = Stroke::new(1.0, COLOR_ACCENT_RED_HOVER);
+    style.visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, COLOR_ACCENT_RED_HOVER);
     style.visuals.widgets.hovered.rounding = Rounding::same(3.0);
 
     style.visuals.widgets.active.bg_fill = COLOR_ACCENT_RED;
-    style.visuals.widgets.active.bg_stroke = Stroke::new(1.5, COLOR_ACCENT_RED);
+    style.visuals.widgets.active.bg_stroke = Stroke::new(1.5_f32, COLOR_ACCENT_RED);
     style.visuals.widgets.active.rounding = Rounding::same(3.0);
 
     style.spacing.item_spacing = Vec2::new(6.0, 6.0);
@@ -80,7 +80,7 @@ pub fn section_header_bar(ui: &mut egui::Ui, title: &str) {
     let (rect, _) = ui.allocate_exact_size(desired_size, egui::Sense::hover());
     let painter = ui.painter_at(rect);
     painter.rect_filled(rect, Rounding::same(3.0), COLOR_HEADER_BG);
-    painter.rect_stroke(rect, Rounding::same(3.0), Stroke::new(1.0, COLOR_HEADER_BORDER));
+    painter.rect_stroke(rect, Rounding::same(3.0), Stroke::new(1.0_f32, COLOR_HEADER_BORDER));
     painter.text(
         Pos2::new(rect.min.x + 10.0, rect.center().y),
         egui::Align2::LEFT_CENTER,
@@ -121,7 +121,7 @@ pub fn collapsible_section_header(
     painter.rect_stroke(
         rect,
         Rounding::same(3.0),
-        Stroke::new(1.0, if is_hovered { COLOR_BORDER_ACTIVE } else { COLOR_HEADER_BORDER }),
+        Stroke::new(1.0_f32, if is_hovered { COLOR_BORDER_ACTIVE } else { COLOR_HEADER_BORDER }),
     );
 
     painter.text(

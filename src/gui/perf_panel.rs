@@ -54,7 +54,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         for &rate in &[
@@ -89,7 +89,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     ui.label(
                         egui::RichText::new("PAW3395 Optical Sensor (26,000 DPI, 650 IPS, 50G)")
@@ -106,7 +106,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(egui::RichText::new("Sleep:").size(11.5));
@@ -137,7 +137,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         if ui.radio(sensor.lod == LiftOffDistance::OneMm, "1 mm").clicked() {
@@ -159,7 +159,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(egui::RichText::new("Debounce:").size(11.5));
@@ -182,7 +182,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     if ui.checkbox(&mut sensor.ripple_control, "Enable Ripple Control").changed() {
                         *pending_apply = true;
@@ -197,7 +197,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     if ui.checkbox(&mut sensor.angle_snap, "Enable Angle Snap").changed() {
                         *pending_apply = true;
@@ -212,7 +212,7 @@ impl PerfPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     if ui.checkbox(&mut sensor.motion_sync, "Enable Motion Sync").changed() {
                         *pending_apply = true;

@@ -51,7 +51,7 @@ impl DpiPanel {
             .fill(COLOR_PANEL_BG)
             .inner_margin(8.0)
             .rounding(4.0)
-            .stroke(Stroke::new(1.0, COLOR_BORDER))
+            .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
             .show(ui, |ui| {
                 let stage_count = sensor.dpi_stages.len().min(6);
                 let avail_w = ui.available_width();
@@ -145,7 +145,7 @@ impl DpiPanel {
                             painter.circle_stroke(
                                 thumb_center,
                                 thumb_radius,
-                                Stroke::new(1.0, Color32::from_rgb(0x88, 0x88, 0x88)),
+                                Stroke::new(1.0_f32, Color32::from_rgb(0x88, 0x88, 0x88)),
                             );
 
                             ui.add_space(3.0);
@@ -232,7 +232,7 @@ impl DpiPanel {
                                     dot_painter.circle_stroke(
                                         dot_center,
                                         4.0,
-                                        Stroke::new(1.0, Color32::from_rgb(0x35, 0x35, 0x35)),
+                                        Stroke::new(1.0_f32, Color32::from_rgb(0x35, 0x35, 0x35)),
                                     );
                                 }
                             });
@@ -252,7 +252,7 @@ impl DpiPanel {
                                 .size(11.5),
                         )
                         .fill(Color32::from_rgb(0x2A, 0x2A, 0x2A))
-                        .stroke(Stroke::new(1.0, COLOR_HEADER_BORDER)),
+                        .stroke(Stroke::new(1.0_f32, COLOR_HEADER_BORDER)),
                     );
 
                     if apply_btn.clicked() {

@@ -38,13 +38,13 @@ impl ProfilesPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(8.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     // Deep black profile box
                     let list_h = 100.0;
                     egui::Frame::none()
                         .fill(Color32::from_rgb(0x0C, 0x0C, 0x0C))
-                        .stroke(Stroke::new(1.0, Color32::from_rgb(0x22, 0x22, 0x22)))
+                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(0x22, 0x22, 0x22)))
                         .rounding(3.0)
                         .inner_margin(4.0)
                         .show(ui, |ui| {
@@ -78,7 +78,7 @@ impl ProfilesPanel {
                                             painter.rect_stroke(
                                                 rect,
                                                 Rounding::same(2.0),
-                                                Stroke::new(1.0, COLOR_ACCENT_RED),
+                                                Stroke::new(1.0_f32, COLOR_ACCENT_RED),
                                             );
                                         }
 
@@ -110,7 +110,7 @@ impl ProfilesPanel {
                                         .color(COLOR_TEXT_PRIMARY),
                                 )
                                 .fill(Color32::from_rgb(0x22, 0x22, 0x22))
-                                .stroke(Stroke::new(1.0, COLOR_HEADER_BORDER)),
+                                .stroke(Stroke::new(1.0_f32, COLOR_HEADER_BORDER)),
                             )
                             .on_hover_text(tooltip)
                         };
@@ -180,7 +180,7 @@ impl ProfilesPanel {
                 .fill(COLOR_PANEL_BG)
                 .inner_margin(10.0)
                 .rounding(4.0)
-                .stroke(Stroke::new(1.0, COLOR_BORDER))
+                .stroke(Stroke::new(1.0_f32, COLOR_BORDER))
                 .show(ui, |ui| {
                     let pct = battery.map(|b| b.percentage).unwrap_or(50); // Default to 50% as in screenshot
 
@@ -198,7 +198,7 @@ impl ProfilesPanel {
 
                         // Outer dark background and stroke
                         painter.rect_filled(body_rect, Rounding::same(3.0), Color32::from_rgb(0x18, 0x18, 0x18));
-                        painter.rect_stroke(body_rect, Rounding::same(3.0), Stroke::new(1.5, Color32::from_rgb(0x44, 0x44, 0x44)));
+                        painter.rect_stroke(body_rect, Rounding::same(3.0), Stroke::new(1.5_f32, Color32::from_rgb(0x44, 0x44, 0x44)));
 
                         // Battery positive terminal nipple on right
                         let tip_rect = Rect::from_min_size(

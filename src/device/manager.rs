@@ -210,33 +210,12 @@ impl DeviceManager {
             .as_mut()
             .ok_or_else(|| anyhow!("Mouse configuration interface not connected or access denied"))?;
 
-        // Packet 1: 0x0C Commit Lead
-        dev.send_feature_report(&burst.commit)
-            .context("Failed sending 0x0C Commit packet")?;
-        sleep(Duration::from_millis(15));
-
-        // Packet 2: 0x04 Sensor & DPI
-        dev.send_feature_report(&burst.sensor)
-            .context("Failed sending 0x04 Sensor packet")?;
-        sleep(Duration::from_millis(15));
-
-        // Packet 3: 0x05 Power Management & Debounce
-        dev.send_feature_report(&burst.power)
-            .context("Failed sending 0x05 Power packet")?;
-        sleep(Duration::from_millis(15));
-
-        // Packet 4: 0x06 Polling Rate
-        dev.send_feature_report(&burst.polling)
-            .context("Failed sending 0x06 Polling Rate packet")?;
-        sleep(Duration::from_millis(15));
-
-        // Packet 5: 0x08 Buttons
-        dev.send_feature_report(&burst.buttons)
-            .context("Failed sending 0x08 Buttons packet")?;
-        sleep(Duration::from_millis(15));
-
-        info!("Configuration burst successfully sent to Attack Shark X3!");
-        Ok(())
+        super::transport::send_burst(
+            self.connection_type,
+            burst,
+            |report| dev.send_feature_report(report).map_err(Into::into),
+            sleep,
+        )
     }
 
     /// Upload a macro to mouse hardware storage

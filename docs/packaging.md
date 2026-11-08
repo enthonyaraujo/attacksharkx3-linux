@@ -44,10 +44,11 @@ docker cp attack-shark-packages-output:/src/target/packages ./target/portable-pa
 docker rm attack-shark-packages-output
 ```
 
-Podman accepts the equivalent commands. The AppImage tool and runtime are checked
-against SHA-256 digests obtained from their official release metadata. If the
-upstream `continuous` assets change, update the URLs/digests together after
-verification; never bypass the checksum failure.
+Podman accepts the equivalent commands. The AppImage tool is pinned to release
+1.9.1, and both the tool and runtime are checked against SHA-256 digests obtained
+from their official release metadata. The runtime still uses an upstream
+`continuous` asset. When updating either input, verify the official metadata and
+downloaded bytes before changing its URL/digest; never bypass a checksum failure.
 
 The AppImage builder accepts `APPIMAGETOOL` and `APPIMAGE_RUNTIME` paths. It bundles
 the ELF dependencies and the X11, keyboard and graphics dispatch libraries loaded

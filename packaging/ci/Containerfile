@@ -14,8 +14,9 @@ COPY . .
 RUN cargo test --locked && cargo build --release --locked
 RUN python3 tests/packaging_tests.py
 RUN bash packaging/deb/build-deb.sh && bash packaging/rpm/build-rpm.sh
-RUN curl -fsSL -o /tmp/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
-    && echo '95cbe7cce9717fce90c484e34052ee7c7f1d7635b33c12525b4776826a7d29b6  /tmp/appimagetool' | sha256sum -c - \
+# Use a versioned tool release: the continuous asset changes independently of us.
+RUN curl -fsSL -o /tmp/appimagetool https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage \
+    && echo 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  /tmp/appimagetool' | sha256sum -c - \
     && curl -fsSL -o /tmp/appimage-runtime https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64 \
     && echo '617aa77314d57c8b8e4fae9c3f0b35af7b30d5529cb69e98f64f92510ed98a46  /tmp/appimage-runtime' | sha256sum -c - \
     && chmod +x /tmp/appimagetool \

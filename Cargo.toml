@@ -1,6 +1,6 @@
 [package]
 name = "attack-shark-x3"
-version = "1.0.0"
+version = "1.0.2"
 edition = "2021"
 authors = ["Enthony <contact@example.com>"]
 description = "Native Linux configuration driver and GUI for the Attack Shark X3 gaming mouse"

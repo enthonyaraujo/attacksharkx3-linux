@@ -1,5 +1,5 @@
 %global debug_package %{nil}
-%{!?app_version:%global app_version 1.0.0}
+%{!?app_version:%global app_version 1.0.2}
 %{!?_udevrulesdir:%global _udevrulesdir %{_prefix}/lib/udev/rules.d}
 
 Name:           attack-shark-x3
@@ -59,5 +59,9 @@ udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || :
 %doc %{_datadir}/doc/attack-shark-x3/
 
 %changelog
+* Sun Nov 08 2026 Enthony <contact@example.com> - 1.0.2-1
+- Fix wireless polling-rate configuration with receiver-aware report pacing
+- Pin the AppImage build tool to a versioned, checksum-verified release
+
 * Tue Oct 20 2026 Enthony <contact@example.com> - 1.0.0-1
 - Install graphics dependencies and configure mouse access automatically

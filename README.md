@@ -51,9 +51,9 @@ Use a package built for your CPU architecture. Native packages install the menu
 entry, icon, runtime dependencies and mouse permissions automatically:
 
 - **Debian / Ubuntu:** open the `.deb` in the system package installer, or run
-  `sudo apt install ./attack-shark-x3_1.0.0_amd64.deb`.
+  `sudo apt install ./attack-shark-x3_1.0.2_amd64.deb`.
 - **Fedora:** open the `.rpm` in the system package installer, or run
-  `sudo dnf install ./attack-shark-x3-1.0.0-1.x86_64.rpm`.
+  `sudo dnf install ./attack-shark-x3-1.0.2-1.x86_64.rpm`.
 - **Arch:** install the generated `.pkg.tar.zst` with `sudo pacman -U ./attack-shark-x3-*.pkg.tar.zst`.
 - **AppImage:** allow the file to run as a program and launch it. Required application
   libraries are bundled. If mouse access is missing, the app opens the system

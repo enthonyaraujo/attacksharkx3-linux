@@ -1,5 +1,5 @@
 %global debug_package %{nil}
-%{!?app_version:%global app_version 1.0.2}
+%{!?app_version:%global app_version 1.0.3}
 %{!?_udevrulesdir:%global _udevrulesdir %{_prefix}/lib/udev/rules.d}
 
 Name:           attack-shark-x3
@@ -60,6 +60,10 @@ udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || :
 %doc %{_datadir}/doc/attack-shark-x3/
 
 %changelog
+* Tue Nov 24 2026 Enthony <contact@example.com> - 1.0.3-1
+- Reopen stale HID handles across sleep/wake, USB resets and wired/wireless mode switches
+- Apply udev device ACLs immediately on install without requiring mouse reconnection
+
 * Sun Nov 08 2026 Enthony <contact@example.com> - 1.0.2-1
 - Fix wireless polling-rate configuration with receiver-aware report pacing
 - Pin the AppImage build tool to a versioned, checksum-verified release

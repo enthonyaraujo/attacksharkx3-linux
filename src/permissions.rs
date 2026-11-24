@@ -29,10 +29,8 @@ impl PermissionSetup {
             return;
         }
         self.attempted = true;
-        let helper = std::env::current_exe().ok().and_then(|exe| {
-            Some(exe.parent()?.parent()?.join("libexec/attack-shark-x3-install-udev"))
-        });
-        let Some(helper) = helper.filter(|p| p.is_file()) else {
+        let helper = std::env::current_exe().ok().and_then(|exe| resolve_helper_for_exe(&exe));
+        let Some(helper) = helper else {
             self.message = Some("Install a Linux package to enable automatic mouse access setup.".into());
             return;
         };
@@ -85,6 +83,23 @@ fn install_permissions(helper: PathBuf) -> Result<(), String> {
     }
 }
 
+fn resolve_helper_for_exe(exe: &Path) -> Option<PathBuf> {
+    if let Some(installed) = exe
+        .parent()
+        .and_then(Path::parent)
+        .map(|prefix| prefix.join("libexec/attack-shark-x3-install-udev"))
+        .filter(|p| p.is_file())
+    {
+        return Some(installed);
+    }
+
+    exe.ancestors().take(5).find_map(|dir| {
+        let helper = dir.join("packaging/udev/install-permissions.sh");
+        let rules = dir.join("packaging/udev/70-attack-shark-x3.rules");
+        (helper.is_file() && rules.is_file()).then_some(helper)
+    })
+}
+
 fn stage_permissions(helper: &Path) -> std::io::Result<tempfile::TempDir> {
     let staged = tempfile::Builder::new()
         .prefix("attack-shark-x3-permissions-")
@@ -97,9 +112,17 @@ fn stage_permissions(helper: &Path) -> std::io::Result<tempfile::TempDir> {
     let executable = libexec.join("attack-shark-x3-install-udev");
     fs::copy(helper, &executable)?;
     fs::set_permissions(&executable, fs::Permissions::from_mode(0o700))?;
-    let source = helper.parent().and_then(Path::parent)
-        .ok_or_else(|| std::io::Error::other("Invalid permission helper location"))?
-        .join("share/attack-shark-x3/70-attack-shark-x3.rules");
+    let helper_dir = helper
+        .parent()
+        .ok_or_else(|| std::io::Error::other("Invalid permission helper location"))?;
+    let packaged_rules = helper_dir
+        .parent()
+        .map(|prefix| prefix.join("share/attack-shark-x3/70-attack-shark-x3.rules"))
+        .filter(|p| p.is_file());
+    let sibling_rules = Some(helper_dir.join("70-attack-shark-x3.rules")).filter(|p| p.is_file());
+    let source = packaged_rules
+        .or(sibling_rules)
+        .ok_or_else(|| std::io::Error::other("Missing 70-attack-shark-x3.rules next to permission helper"))?;
     fs::copy(source, share.join("70-attack-shark-x3.rules"))?;
     Ok(staged)
 }
@@ -145,5 +168,30 @@ mod tests {
         assert!(!setup.poll());
         assert!(!setup.is_running());
         assert_eq!(setup.message.as_deref(), Some("Authentication cancelled"));
+    }
+
+    #[test]
+    fn resolves_and_stages_helper_from_source_checkout_layout() {
+        let repo = tempfile::tempdir().unwrap();
+        let target_bin_dir = repo.path().join("target/release");
+        let udev_dir = repo.path().join("packaging/udev");
+        fs::create_dir_all(&target_bin_dir).unwrap();
+        fs::create_dir_all(&udev_dir).unwrap();
+        let exe = target_bin_dir.join("attack-shark-x3");
+        fs::write(&exe, b"").unwrap();
+        fs::write(
+            udev_dir.join("install-permissions.sh"),
+            "#!/bin/sh\ncat \"$(dirname \"$0\")/../share/attack-shark-x3/70-attack-shark-x3.rules\"\n",
+        )
+        .unwrap();
+        fs::write(udev_dir.join("70-attack-shark-x3.rules"), "source checkout rules\n").unwrap();
+
+        let helper = resolve_helper_for_exe(&exe).expect("should find helper in source checkout");
+        let staged = stage_permissions(&helper).unwrap();
+        let output = Command::new(staged.path().join("libexec/attack-shark-x3-install-udev"))
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        assert_eq!(output.stdout, b"source checkout rules\n");
     }
 }

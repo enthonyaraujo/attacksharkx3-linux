@@ -149,7 +149,11 @@ impl eframe::App for AttackSharkApp {
         ctx.request_repaint_after(Duration::from_secs(1));
 
         if self.permissions.poll() {
-            self.device.refresh_connection();
+            if self.device.refresh_connection() == ConnectionType::PermissionDenied {
+                // Allow logind a brief moment to finish applying seat ACLs before the next poll.
+                self.last_poll_time = Instant::now() - Duration::from_millis(1750);
+                ctx.request_repaint_after(Duration::from_millis(250));
+            }
             self.sync_tray_state();
         }
         if self.device.connection_type == ConnectionType::PermissionDenied {

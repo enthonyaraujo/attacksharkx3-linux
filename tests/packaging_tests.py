@@ -76,6 +76,8 @@ class PackagingTests(unittest.TestCase):
         self.assertNotIn('MODE="0666"', contents)
         self.assertIn('"fa60"', contents)
         self.assertIn('"fa61"', contents)
+        self.assertIn('KERNELS=="*1D57:FA60*"', contents)
+        self.assertIn('KERNELS=="*1D57:FA61*"', contents)
 
     def test_deb_postinstall_refreshes_devices_without_manual_commands(self):
         control, _ = self.deb_archives()
@@ -88,7 +90,7 @@ class PackagingTests(unittest.TestCase):
         subprocess.run(["sh", hook, "configure"], env=dict(self.env, TEST_UDEV_LOG=str(log)), check=True)
         calls = log.read_text()
         self.assertIn("control --reload-rules", calls)
-        self.assertIn("trigger --subsystem-match=hidraw", calls)
+        self.assertIn("trigger --subsystem-match=hidraw --action=add", calls)
 
     def test_appimage_stages_runtime_libraries_and_permission_helper(self):
         self.build("appimage")

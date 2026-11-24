@@ -16,5 +16,6 @@ install -Dm0644 "$HERE/../share/attack-shark-x3/70-attack-shark-x3.rules" /etc/u
 # Remove the legacy manual rule, which granted access to every local user.
 rm -f /etc/udev/rules.d/99-attack-shark-x3.rules
 udevadm control --reload-rules
-udevadm trigger --subsystem-match=hidraw --action=change
+udevadm trigger --subsystem-match=usb --attr-match=idVendor=1d57 --action=change 2>/dev/null || true
+udevadm trigger --subsystem-match=hidraw --action=add
 udevadm settle --timeout=5

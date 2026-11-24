@@ -41,7 +41,8 @@ cp -a usr %{buildroot}/
 
 %post
 udevadm control --reload-rules 2>/dev/null || :
-udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || :
+udevadm trigger --subsystem-match=usb --attr-match=idVendor=1d57 --action=change 2>/dev/null || :
+udevadm trigger --subsystem-match=hidraw --action=add 2>/dev/null || :
 udevadm settle --timeout=5 2>/dev/null || :
 
 %postun

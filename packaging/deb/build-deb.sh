@@ -26,7 +26,18 @@ for hook in postinst postrm; do
 #!/bin/sh
 set -e
 case "${1:-}" in
-    configure|remove|purge)
+    configure)
+        if command -v udevadm >/dev/null 2>&1; then
+            udevadm control --reload-rules 2>/dev/null || true
+            udevadm trigger --subsystem-match=usb --attr-match=idVendor=1d57 --action=change 2>/dev/null || true
+            udevadm trigger --subsystem-match=hidraw --action=add 2>/dev/null || true
+            udevadm settle --timeout=5 2>/dev/null || true
+        fi
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q /usr/share/applications 2>/dev/null || true
+        fi
+        ;;
+    remove|purge)
         if command -v udevadm >/dev/null 2>&1; then
             udevadm control --reload-rules 2>/dev/null || true
             udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
